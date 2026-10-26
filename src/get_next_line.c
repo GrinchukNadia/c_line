@@ -100,15 +100,15 @@ static	char *ft_join_n(char *rest, const char *buffer, size_t size)
 	return (res);
 }
 
-ssize_t find_newl(char *buffer, ssize_t bytes)
+ssize_t find_newl(char *buffer)
 {
 	ssize_t i;
 	
 	i = 0;
-	while (i < bytes)
+	while (buffer[i])
 	{
 		if (buffer[i] == '\n')
-		return (i + 1);
+			return (i + 1);
 		i++;
 	}
 	return (-1);
@@ -123,15 +123,15 @@ char *get_next_line(int fd)
 	ssize_t		bytes = 1;
 	ssize_t		new_l;
 	
-	//  выдляю память для буффера
+	//  allocate memory for buffer
 	buffer = malloc(BUFFER_SIZE + 1);
 	if (!buffer)
 		return NULL;
 
-	// если еще в ресте остались строки то мы выделяем оттуда очередную строку и возвращаем эту строку.
+	// extract a complete line from previously saved data, if available.
 	if (rest)
 	{ 
-		new_l = find_newl(rest, ft_strlen(rest));
+		new_l = find_newl(rest);
 		if (new_l != -1)
 		{
 			line = ft_substr(rest, 0, new_l);
@@ -195,7 +195,7 @@ char *get_next_line(int fd)
 	rest = tmp;
 
 	//смотрим есть ли брейк в rest
-	new_l = find_newl(rest, ft_strlen(rest));
+	new_l = find_newl(rest);
 
 	// пока нет брейка продолжаю читать и записывать все в рест
 	while (new_l == -1)
@@ -226,7 +226,7 @@ char *get_next_line(int fd)
 		free(rest);
 		rest = tmp;
 
-		new_l = find_newl(rest, ft_strlen(rest));
+		new_l = find_newl(rest);
 	}
 
 	// как только нашли брейк и это не конец файла формируем строку и остаток реста
