@@ -10,10 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-// #include "get_next_line.h"
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include "get_next_line.h"
 
 static size_t	ft_strlen(const char *s)
 {
@@ -25,25 +22,78 @@ static size_t	ft_strlen(const char *s)
 	return (c);
 }
 
-static char	*ft_strjoin(char const *s1, char const *s2)
+static size_t	substr_len(size_t sz_s, unsigned int start, size_t len)
+{
+	size_t	sz_c;
+
+	if (start >= sz_s)
+		return (0);
+	if (sz_s - start < len)
+		sz_c = sz_s - start;
+	else
+		sz_c = len;
+	return (sz_c);
+}
+
+char	*ft_substr(char const *s, unsigned int start, size_t len)
 {
 	size_t	i;
-	size_t	s1_sz;
-	size_t	s2_sz;
+	size_t	sz_s;
+	size_t	sz_c;
 	char	*res;
 
 	i = 0;
-	s1_sz = ft_strlen(s1);
-	s2_sz = ft_strlen(s2);
-	res = malloc(s1_sz + s2_sz + 1);
+	sz_s = ft_strlen(s);
+	sz_c = substr_len(sz_s, start, len);
+	res = malloc(sz_c + 1);
 	if (!res)
 		return (NULL);
-	while (i < s1_sz + s2_sz)
+	while (i < sz_c)
 	{
-		if (i < s1_sz)
-			res[i] = s1[i];
-		else
-			res[i] = s2[i - s1_sz];
+		res[i] = s[start + i];
+		i++;
+	}
+	res[i] = '\0';
+	return (res);
+}
+
+
+static	char *ft_join_n(char *rest, const char *buffer, size_t size)
+{
+	size_t	i;
+	size_t	x;
+	size_t	y;
+	char *res;
+
+	i = 0;
+	x = 0;
+	y = 0;
+	if (rest == NULL)
+		x = 0;
+	else
+	{
+		x = ft_strlen(rest);
+	}
+
+	while (i < size && buffer[i])
+		i++;
+	res = malloc(x + i + 1);
+	if (!res)
+		return (NULL);
+	i = 0;
+	if (rest != NULL)
+	{
+		while (rest[i])
+		{
+			res[i] = rest[i];
+			i++;
+		}
+	}
+	while (y < size && buffer[y])
+	{
+	 
+		res[i] = buffer[y];
+		y++;
 		i++;
 	}
 	res[i] = '\0';
@@ -52,59 +102,166 @@ static char	*ft_strjoin(char const *s1, char const *s2)
 
 ssize_t find_newl(char *buffer, ssize_t bytes)
 {
-    ssize_t i;
-
-    i = 0;
-    while (i < bytes)
-    {
-        if (buffer[i] == '\n')
-            return (i + 1);
-        i++;
-    }
-    return (-1);
+	ssize_t i;
+	
+	i = 0;
+	while (i < bytes)
+	{
+		if (buffer[i] == '\n')
+		return (i + 1);
+		i++;
+	}
+	return (-1);
 }
 
 char *get_next_line(int fd)
 {
-    int i = 0;
-    int fd;
-    char *buffer;
-    static char *rest;
-    char *line;
-    ssize_t bytes = 1;
-    ssize_t new_l;
+	static char *rest;
+	char		*buffer;
+	char		*line;
+	char		*tmp;
+	ssize_t		bytes = 1;
+	ssize_t		new_l;
+	
+	//  выдляю память для буффера
+	buffer = malloc(BUFFER_SIZE + 1);
+	if (!buffer)
+		return NULL;
 
-    buffer = malloc(BUFFER_SIZE + 1);
-    if (!buffer)
-        return NULL;
+	// если еще в ресте остались строки то мы выделяем оттуда очередную строку и возвращаем эту строку.
+	if (rest)
+	{ 
+		new_l = find_newl(rest, ft_strlen(rest));
+		if (new_l != -1)
+		{
+			line = ft_substr(rest, 0, new_l);
+			if (!line)
+			{
+				free(rest);
+				rest = NULL;
+				free(buffer);
+				return (NULL);
+			}
+			tmp = ft_substr(rest, new_l, ft_strlen(rest) - new_l);
+			if (!tmp)
+			{
+				free(rest);
+				rest = NULL;
+				free(buffer);
+				free(line);
+				return (NULL);
+			}
+			free(rest);
+			rest = tmp;
+			free(buffer);
+			return (line);
+		}
+	}
 
-    bytes = read(fd, buffer, BUFFER_SIZE);
-    while(bytes > 0)
-    {   
-        buffer[bytes] = '\0';
+	// читаю и сохраняю в буфер результат длиной buffer size
+	bytes = read(fd, buffer, BUFFER_SIZE);
+	if (bytes == -1)
+	{
+		free(rest);
+		rest = NULL;
+		free(buffer);
+		return (NULL);
+	}
+	else if (bytes == 0)
+	{
+		free(buffer);
+		if(!rest || !rest[0])
+		{
+			free(rest);
+			rest = NULL;
+			return (NULL);
+		}
+		line = rest;
+		rest = NULL;
+		return (line);
+	}
+	buffer[bytes] = '\0';
 
-        if (rest == NULL)
-            ft_strjoin(rest, buffer);
-        
-        new_l = find_newl(rest, BUFFER_SIZE);
-        if (new_l == -1)
-        {
-            rest = ft_strjoin(rest, buffer);
-        }
-        else
-        {
-            read(fd, buffer, BUFFER_SIZE);
-            rest = ft_strjoin(rest, buffer);
-        }
-        bytes = read(fd, buffer, BUFFER_SIZE);
+	// записываю в рест весь буффер
+	tmp = ft_join_n(rest, buffer, ft_strlen(buffer));
+	if (!tmp)
+	{
+		free(rest);
+		rest = NULL;
+		free(buffer);
+		return (NULL);
+	}
+	free(rest);
+	rest = tmp;
 
-        printf("READ %s\n", buffer);
-        printf("Bytes: %zd\n", bytes);
-        printf("position: %d\n\n", new_l);
-    }
+	//смотрим есть ли брейк в rest
+	new_l = find_newl(rest, ft_strlen(rest));
 
+	// пока нет брейка продолжаю читать и записывать все в рест
+	while (new_l == -1)
+	{
+		
+		bytes = read(fd, buffer, BUFFER_SIZE);
+		if (bytes == -1)
+		{
+			free(rest);
+			rest = NULL;
+			free(buffer);
+			return (NULL);
+		} 
+		if (bytes == 0)
+			break ;
 
-    close(fd);
-    free(buffer);
-    return (line);
+		buffer[bytes] = '\0';
+
+		// записываю в рест весь буффер
+		tmp = ft_join_n(rest, buffer, bytes);
+		if (!tmp)
+		{
+			free(rest);
+			rest = NULL;
+			free(buffer);
+			return (NULL);
+		}
+		free(rest);
+		rest = tmp;
+
+		new_l = find_newl(rest, ft_strlen(rest));
+	}
+
+	// как только нашли брейк и это не конец файла формируем строку и остаток реста
+	if (new_l != -1 && bytes > 0)
+	{
+		line = ft_substr(rest, 0, new_l);
+		if (!line)
+			return (NULL);
+		tmp = ft_substr(rest, new_l, ft_strlen(rest) - new_l);
+		if (!tmp)
+		{
+			free(rest);
+			rest = NULL;
+			free(buffer);
+			free(line);
+			return (NULL);
+		}
+		free(rest);
+		rest = tmp;
+	}
+
+	// если это конец файла и рест пустой то все освобождаем
+	else if(new_l == -1 && bytes == 0)
+	{
+		free(buffer);
+		if (!rest || !rest[0])
+		{
+			free(rest);
+			rest = NULL;
+			return (NULL);
+		}
+		line = rest;
+		rest = NULL;
+		return (line);
+	}
+	free(buffer);
+	return (line);
 }
