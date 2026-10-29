@@ -34,8 +34,8 @@ char	*ft_substr(char const *s, unsigned int start, size_t len)
 
 	i = 0;
 	sz_s = 0;
-	while (s[c])
-		sz_c++;
+	while (s[sz_s])
+		sz_s++;
 	sz_c = substr_len(sz_s, start, len);
 	res = malloc(sz_c + 1);
 	if (!res)
@@ -74,14 +74,16 @@ char	*ft_join_n(char *rest, const char *buffer,
 	i = 0;
 	if (rest == NULL)
 		*pos = 0;
-	while (*pos + bytes > *capacity)
+	if (*pos + bytes > *capacity)
+	{
 		*capacity *= 2;
-	temp = rest;
-	rest = malloc(*capacity +1);
-	if (!rest)
-		return (NULL);
-	rest = copy_line(temp, rest);
-	free(temp);
+		temp = rest;
+		rest = malloc(*capacity +1);
+		if (!rest)
+			return (NULL);
+		rest = copy_line(temp, rest);
+		free(temp);
+	}
 	if (!rest)
 	{
 		rest = malloc(*capacity + 1);
