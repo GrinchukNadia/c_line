@@ -12,27 +12,105 @@
 
 #include "get_next_line.h"
 
-// static char	*ft_strjoin(char const *s1, char const *s2)
-// {
-// 	size_t	i;
-// 	size_t	s1_sz;
-// 	size_t	s2_sz;
-// 	char	*res;
+static size_t	substr_len(size_t sz_s, unsigned int start, size_t len)
+{
+	size_t	sz_c;
 
-// 	i = 0;
-// 	s1_sz = ft_strlen(s1);
-// 	s2_sz = ft_strlen(s2);
-// 	res = malloc(s1_sz + s2_sz + 1);
-// 	if (!res)
-// 		return (NULL);
-// 	while (i < s1_sz + s2_sz)
-// 	{
-// 		if (i < s1_sz)
-// 			res[i] = s1[i];
-// 		else
-// 			res[i] = s2[i - s1_sz];
-// 		i++;
-// 	}
-// 	res[i] = '\0';
-// 	return (res);
-// }
+	if (start >= sz_s)
+		return (0);
+	if (sz_s - start < len)
+		sz_c = sz_s - start;
+	else
+		sz_c = len;
+	return (sz_c);
+}
+
+char	*ft_substr(char const *s, unsigned int start, size_t len)
+{
+	size_t	i;
+	size_t	sz_s;
+	size_t	sz_c;
+	char	*res;
+
+	i = 0;
+	sz_s = 0;
+	while (s[c])
+		sz_c++;
+	sz_c = substr_len(sz_s, start, len);
+	res = malloc(sz_c + 1);
+	if (!res)
+		return (NULL);
+	while (i < sz_c)
+	{
+		res[i] = s[start + i];
+		i++;
+	}
+	res[i] = '\0';
+	return (res);
+}
+
+char	*copy_line(char *rest, char *new)
+{
+	int	i;
+
+	i = 0;
+	if (!rest)
+		return (NULL);
+	while (rest[i])
+	{
+		new[i] = rest[i];
+		i++;
+	}
+	new[i] = '\0';
+	return (new);
+}
+
+char	*ft_join_n(char *rest, const char *buffer,
+	size_t bytes, size_t *capacity, size_t *pos)
+{
+	size_t	i;
+	char	*temp;
+
+	i = 0;
+	if (rest == NULL)
+		*pos = 0;
+	while (*pos + bytes > *capacity)
+		*capacity *= 2;
+	temp = rest;
+	rest = malloc(*capacity +1);
+	if (!rest)
+		return (NULL);
+	rest = copy_line(temp, rest);
+	free(temp);
+	if (!rest)
+	{
+		rest = malloc(*capacity + 1);
+		if (!rest)
+			return (NULL);
+	}
+	if (rest != NULL)
+	{
+		while (i < bytes)
+		{
+			rest[*pos] = buffer[i];
+			i++;
+			(*pos)++;
+		}
+	}
+	rest[*pos] = '\0';
+	return (rest);
+}
+
+ssize_t	find_newl(char *buffer)
+{
+	ssize_t	i;
+
+	i = 0;
+	while (buffer[i])
+	{
+		if (buffer[i] == '\n')
+			return (i + 1);
+		i++;
+	}
+	return (-1);
+}
