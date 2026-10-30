@@ -12,13 +12,18 @@
 
 #include "get_next_line.h"
 
-static char	*handle_err(char **rest, char *buffer, char *line)
+ssize_t	find_newl(char *buffer)
 {
-	free(*rest);
-	*rest = NULL;
-	free(buffer);
-	free(line);
-	return (NULL);
+	ssize_t	i;
+
+	i = 0;
+	while (buffer[i])
+	{
+		if (buffer[i] == '\n')
+			return (i + 1);
+		i++;
+	}
+	return (-1);
 }
 
 static char	*extract_ln(char **rest, ssize_t new_l, size_t *pos)
@@ -45,75 +50,88 @@ static char	*extract_ln(char **rest, ssize_t new_l, size_t *pos)
 	return (line);
 }
 
-char	*get_next_line(int fd)
+static ssize_t	read_line(int fd, t_st_data *state)
 {
-	static char		*rest;
-	static size_t	capacity;
-	static size_t	pos;
-	char			*buffer;
-	char			*line;
-	char			*tmp;
-	ssize_t			bytes;
-	ssize_t			new_l;
+	char	*tmp;
+	ssize_t	bytes;
+	char	*buffer;
 
-	line = NULL;
-	new_l = -1;
 	bytes = 1;
-	if (BUFFER_SIZE <= 0 || fd < 0)
-		return (NULL);
-	if (capacity == 0)
-		capacity = BUFFER_SIZE;
-	if (rest)
-	{
-		new_l = find_newl(rest);
-		if (new_l != -1)
-		{
-			line = extract_ln(&rest, new_l, &pos);
-			return (line);
-		}
-	}
 	buffer = malloc(BUFFER_SIZE + 1);
 	if (!buffer)
-		return (NULL);
-	while (new_l == -1)
+		return (-1);
+	while (bytes > 0)
 	{
 		bytes = read(fd, buffer, BUFFER_SIZE);
-		if (bytes == -1)
-			return (handle_err(&rest, buffer, line));
-		else if (bytes == 0)
+		if (bytes <= 0)
 			break ;
 		buffer[bytes] = '\0';
-		tmp = ft_join_n(rest, buffer, bytes, &capacity, &pos);
+		tmp = ft_join_n(buffer, bytes, state);
 		if (!tmp)
-			return (handle_err(&rest, buffer, line));
-		rest = tmp;
-		new_l = find_newl(rest);
+			bytes = -1;
+		if (bytes == -1)
+			break ;
+		state->rest = tmp;
+		if (find_newl(state->rest) != -1)
+			break ;
 	}
+	free(buffer);
+	return (bytes);
+}
+
+static char	*get_line(t_st_data *state, ssize_t bytes, ssize_t new_l, char *l)
+{
+	if (state->rest)
+		new_l = find_newl(state->rest);
 	if (new_l != -1 && bytes > 0)
 	{
-		new_l = find_newl(rest);
-		line = extract_ln(&rest, new_l, &pos);
-		if (line == NULL)
+		l = extract_ln(&state->rest, new_l, &state->pos);
+		if (l == NULL)
 		{
-			free(buffer);
 			return (NULL);
 		}
-		free(buffer);
-		return (line);
+		return (l);
 	}
 	else if (new_l == -1 && bytes == 0)
 	{
-		free(buffer);
-		if (!rest || !rest[0])
+		if (!state->rest || !state->rest[0])
 		{
-			free(rest);
-			rest = NULL;
+			free(state->rest);
+			state->rest = NULL;
 			return (NULL);
 		}
-		line = rest;
-		rest = NULL;
-		return (line);
+		l = state->rest;
+		state->rest = NULL;
 	}
-	free(buffer);
-	return (line);
+	free(state->rest);
+	state->rest = NULL;
+	return (l);
+}
+
+char	*get_next_line(int fd)
+{
+	static t_st_data	state;
+	char				*line;
+	ssize_t				bytes;
+	ssize_t				new_l;
+
+	line = NULL;
+	new_l = -1;
+	if (BUFFER_SIZE <= 0 || fd < 0)
+		return (NULL);
+	if (state.capacity == 0)
+		state.capacity = BUFFER_SIZE;
+	if (state.rest)
+		new_l = find_newl(state.rest);
+	if (new_l != -1)
+		return (extract_ln(&state.rest, new_l, &state.pos));
+	bytes = read_line(fd, &state);
+	if (bytes == -1)
+	{
+		free(state.rest);
+		state.rest = NULL;
+		free(line);
+		return (NULL);
+	}
+	return (get_line(&state, bytes, new_l, line));
 }

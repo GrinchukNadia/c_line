@@ -21,10 +21,16 @@
 #  define BUFFER_SIZE 42
 # endif
 
+typedef struct s_st_data
+{
+	char	*rest;
+	size_t	capacity;
+	size_t	pos;
+}			t_st_data;
+
 char	*get_next_line(int fd);
 ssize_t	find_newl(char *buffer);
 char	*ft_substr(char const *s, unsigned int start, size_t len);
-char	*ft_join_n(char *rest, const char *buffer,
-			size_t bytes, size_t *capacity, size_t *pos);
+char	*ft_join_n(const char *buffer, size_t bytes, t_st_data *state);
 
 #endif

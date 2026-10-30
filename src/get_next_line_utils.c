@@ -65,54 +65,47 @@ char	*copy_line(char *rest, char *new)
 	return (new);
 }
 
-char	*ft_join_n(char *rest, const char *buffer,
-	size_t bytes, size_t *capacity, size_t *pos)
+int	expand_rest(t_st_data *state, size_t bytes)
 {
-	size_t	i;
 	char	*temp;
 
-	i = 0;
-	if (rest == NULL)
-		*pos = 0;
-	if (*pos + bytes > *capacity)
+	if (state->rest == NULL)
+		state->pos = 0;
+	if (state->pos + bytes > state->capacity)
 	{
-		*capacity *= 2;
-		temp = rest;
-		rest = malloc(*capacity +1);
-		if (!rest)
-			return (NULL);
-		rest = copy_line(temp, rest);
+		state->capacity *= 2;
+		temp = state->rest;
+		state->rest = malloc(state->capacity +1);
+		if (!state->rest)
+			return (0);
+		state->rest = copy_line(temp, state->rest);
 		free(temp);
 	}
-	if (!rest)
+	return (1);
+}
+
+char	*ft_join_n(const char *buffer, size_t bytes, t_st_data *state)
+{
+	size_t	i;
+
+	i = 0;
+	if (!expand_rest(state, bytes))
+		return (NULL);
+	if (!state->rest)
 	{
-		rest = malloc(*capacity + 1);
-		if (!rest)
+		state->rest = malloc(state->capacity + 1);
+		if (!state->rest)
 			return (NULL);
 	}
-	if (rest != NULL)
+	if (state->rest != NULL)
 	{
 		while (i < bytes)
 		{
-			rest[*pos] = buffer[i];
+			state->rest[state->pos] = buffer[i];
 			i++;
-			(*pos)++;
+			(state->pos)++;
 		}
 	}
-	rest[*pos] = '\0';
-	return (rest);
-}
-
-ssize_t	find_newl(char *buffer)
-{
-	ssize_t	i;
-
-	i = 0;
-	while (buffer[i])
-	{
-		if (buffer[i] == '\n')
-			return (i + 1);
-		i++;
-	}
-	return (-1);
+	state->rest[state->pos] = '\0';
+	return (state->rest);
 }
