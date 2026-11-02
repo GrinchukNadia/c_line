@@ -73,4 +73,4 @@ This approach improves memory management and makes processing long lines more ef
 
 The flowchart below illustrates how `get_next_line()` processes data, checks for newline characters, handles reading errors and end-of-file conditions, and returns one line at a time while preserving unread data for subsequent calls.
 
-![Get Next Line Flowchart](https://github.com/GrinchukNadia/c_line/tree/main/img/diagram.png)
+![Get Next Line Flowchart](https://raw.githubusercontent.com/GrinchukNadia/c_line/main/img/diagram.png)
