@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include "get_next_line.h"
+
 int main()
 {
     int fd;
@@ -14,23 +16,12 @@ int main()
         return (1);
 
     line = get_next_line(fd);
-    printf("First [%s] \n", line ? line : "NULL");
-    free(line);
-
-    line = get_next_line(fd);
-    printf("second [%s] \n", line ? line : "NULL");
-    free(line);
-
-    line = get_next_line(fd);
-    printf("third [%s] \n", line ? line : "NULL");
-    free(line);
-
+    while(line != NULL)
+    {
+        printf("%s", line ? line : "NULL");
+        free(line);
+        line = get_next_line(fd);
+    }
     close(fd);
     return (0);
 }
-// while(line != NULL)
-// {
-//     printf("%s", line);
-//     free(line);
-//     line = get_next_line(fd);
-// }
