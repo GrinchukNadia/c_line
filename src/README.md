@@ -44,13 +44,6 @@ Each returned line is dynamically allocated and must be freed by the caller.
 The function can be used with regular files and standard input.
 
 ## Resources
-- [File Descriptors in C](https://www.codequoi.com/en/handling-a-file-by-its-descriptor-in-c/)
-
-## Resources
-
-- [File Descriptors in C](https://www.codequoi.com/en/handling-a-file-by-its-descriptor-in-c/) — Understanding file descriptors and file operations in C.
-- [Understanding Important System Calls in C](https://medium.com/@noransaber685/understanding-important-system-calls-in-c-fork-open-read-close-chdir-getline-and-access-2836cc761b17) — An overview of system calls, including open(), read(), and close().
-## Resources
 
 - [File Descriptors in C — Codequoi](https://www.codequoi.com/en/handling-a-file-by-its-descriptor-in-c/) — Understanding file descriptors and file operations in C.
 - [Understanding Important System Calls in C — Medium](https://medium.com/@noransaber685/understanding-important-system-calls-in-c-fork-open-read-close-chdir-getline-and-access-2836cc761b17) — An overview of system calls, including open(), read(), and close().
